@@ -7,7 +7,6 @@ use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Teacher\Dashboard as TeacherDashboard;
 
 use App\Livewire\Student\Dashboard as StudentDashboard;
-
 // Redirige la ruta raíz a la página de login
 Route::get('/', function () {
     return redirect()->route('login');
@@ -32,6 +31,12 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
+
+    // Esta es la ruta para acceder a la gestión de sedes
+    Route::get('/sedes', CampusManagement::class)->name('campuses');
+
+});
 // Rutas de administrador
 Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard/{section?}', AdminDashboard::class)

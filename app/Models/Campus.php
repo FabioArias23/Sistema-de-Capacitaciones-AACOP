@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Campus extends Model
 {
     protected $fillable = [
-    'name',
-    'address',
-    'city',
-    'capacity',
-    'status',
-];
+        'name',
+        'address',
+        'city',
+        'capacity',
+        'status',
+    ];
 }

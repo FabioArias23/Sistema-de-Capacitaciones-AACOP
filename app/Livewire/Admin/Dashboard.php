@@ -48,6 +48,6 @@ class Dashboard extends Component
     {
         // ESTA ES LA LÍNEA IMPORTANTE QUE CORRIGE EL ERROR:
         return view('livewire.admin.dashboard')
-            ->layout('layouts.app');
+             ->layout('layouts.panel');
     }
 }

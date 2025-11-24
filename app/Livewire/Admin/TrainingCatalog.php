@@ -10,6 +10,7 @@ class TrainingCatalog extends Component
     public string $searchTerm = '';
     public bool $dialogOpen = false;
 
+    // Inicializamos el array para evitar errores de "undefined index"
     public array $trainingForm = [
         'id' => null,
         'title' => '',
@@ -22,7 +23,6 @@ class TrainingCatalog extends Component
         'status' => 'Activo',
     ];
 
-    // Reglas de validación para el formulario
     protected function rules()
     {
         return [
@@ -45,10 +45,9 @@ class TrainingCatalog extends Component
                     ->orWhere('category', 'like', '%' . $this->searchTerm . '%')
                     ->orWhere('instructor', 'like', '%' . $this->searchTerm . '%');
             })
+            ->orderBy('id', 'desc')
             ->get();
 
-        // Nota: No especificamos un layout aquí porque este componente
-        // se renderiza dentro del Dashboard, que ya tiene un layout.
         return view('livewire.admin.training-catalog', [
             'trainings' => $trainings,
         ]);
@@ -56,12 +55,19 @@ class TrainingCatalog extends Component
 
     public function create()
     {
+        $this->resetValidation();
         $this->reset('trainingForm');
+        // Valores por defecto
+        $this->trainingForm['capacity'] = 20;
+        $this->trainingForm['status'] = 'Activo';
+        $this->trainingForm['level'] = 'Básico';
+
         $this->dialogOpen = true;
     }
 
     public function edit(Training $training)
     {
+        $this->resetValidation();
         $this->trainingForm = $training->toArray();
         $this->dialogOpen = true;
     }
@@ -70,11 +76,13 @@ class TrainingCatalog extends Component
     {
         $this->validate();
 
-        if (isset($this->trainingForm['id'])) {
+        if (isset($this->trainingForm['id']) && $this->trainingForm['id']) {
             $training = Training::find($this->trainingForm['id']);
             $training->update($this->trainingForm);
+            session()->flash('success', 'Capacitación actualizada correctamente.');
         } else {
             Training::create($this->trainingForm);
+            session()->flash('success', 'Capacitación creada correctamente.');
         }
 
         $this->dialogOpen = false;
@@ -83,15 +91,16 @@ class TrainingCatalog extends Component
     public function delete(Training $training)
     {
         $training->delete();
+        session()->flash('success', 'Capacitación eliminada correctamente.');
     }
 
-    // Función de ayuda para obtener la clase CSS del badge según el nivel
     public function getLevelColorClass(string $level): string
     {
-        return [
-            'Básico' => 'bg-[#00A885]/10 text-[#00A885] dark:bg-[#00A885]/20',
-            'Intermedio' => 'bg-[#FFD700]/10 text-[#B8860B] dark:bg-[#FFD700]/20 dark:text-[#FFD700]',
-            'Avanzado' => 'bg-[#ED1C24]/10 text-[#ED1C24] dark:bg-[#ED1C24]/20',
-        ][$level] ?? 'bg-muted text-muted-foreground';
+        return match ($level) {
+            'Básico' => 'bg-[#00A885]/10 text-[#00A885]',
+            'Intermedio' => 'bg-[#FFD700]/10 text-[#B8860B]',
+            'Avanzado' => 'bg-[#ED1C24]/10 text-[#ED1C24]',
+            default => 'bg-gray-100 text-gray-800',
+        };
     }
 }

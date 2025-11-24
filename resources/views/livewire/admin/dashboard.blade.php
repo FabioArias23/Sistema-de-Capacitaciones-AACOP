@@ -8,10 +8,12 @@
         :class="sidebarOpen ? 'w-64' : 'w-20'"
     >
         <div class="p-4 border-b border-sidebar-border">
-            <div :class="sidebarOpen ? '' : 'flex justify-center'">
-                <h1 class="text-2xl font-bold text-primary" x-show="sidebarOpen">AACOP</h1>
-                <h1 class="text-2xl font-bold text-primary" x-show="!sidebarOpen">A</h1>
-            </div>
+           <div x-show="sidebarOpen">
+            <x-logo variant="aniversario" size="md" />
+        </div>
+        <div x-show="!sidebarOpen" style="display: none;">
+            <x-logo variant="aniversario" size="sm" />
+        </div>
         </div>
 
         <!-- Desktop Navigation -->
