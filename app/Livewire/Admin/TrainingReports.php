@@ -14,109 +14,123 @@ use Illuminate\Support\Facades\DB;
 class TrainingReports extends Component
 {
     // Métricas
-    public $totalParticipants;
-    public $totalTrainings;
-    public $completionRate;
-    public $averageGrade;
+    public $totalParticipants = 0;
+    public $totalTrainings = 0;
+    public $completionRate = 0;
+    public $averageGrade = 0;
 
     // Datos para Gráficos
     public $enrollmentsChartData = [];
     public $categoryChartData = [];
-    public $departmentChartData = []; // Nuevo
-    public $gradesChartData = [];     // Nuevo
+    public $departmentChartData = [];
+    public $gradesChartData = [];
 
     public function mount()
     {
         $this->calculateMetrics();
-        $this->prepareLineChart();      // Inscripciones vs Completadas
-        $this->prepareDoughnutChart();  // Categorías
-        $this->prepareBarChart();       // Departamentos
-        $this->prepareHorizontalBarChart(); // Calificaciones
-
-
+        $this->prepareCharts();
     }
 
     public function calculateMetrics()
     {
         $this->totalParticipants = User::where('role', 'student')->count();
         $this->totalTrainings = Training::count();
+
         $totalEnrollments = Enrollment::count();
-        $completed = Enrollment::where('status', 'Aprobado')->count();
+        $completed = Enrollment::whereIn('status', ['Aprobado', 'Completado'])->count();
 
         $this->completionRate = $totalEnrollments > 0 ? round(($completed / $totalEnrollments) * 100) : 0;
-        $this->averageGrade = round(Enrollment::whereNotNull('grade')->avg('grade') ?? 0);
+        $this->averageGrade = round(Enrollment::whereNotNull('grade')->avg('grade') ?? 0, 1);
     }
 
-    public function prepareLineChart()
+    public function prepareCharts()
     {
-        // Simulación de datos por mes para que coincida con la imagen
-        // En producción, usarías DB::raw queries agrupadas por mes
-        $months = ['Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov'];
+        // 1. Gráfico de Línea: Inscripciones por Mes (Últimos 6 meses)
+        // Nota: Si usas SQLite, cambia DATE_FORMAT por strftime
+        $monthlyStats = Enrollment::select(
+            DB::raw("DATE_FORMAT(created_at, '%b') as month"),
+            DB::raw('count(*) as total')
+        )
+        ->where('created_at', '>=', now()->subMonths(6))
+        ->groupBy('month')
+        ->orderBy('created_at')
+        ->get();
+
+        // Si no hay datos, ponemos datos dummy para que el gráfico no se vea vacío al inicio
+        if ($monthlyStats->isEmpty()) {
+            $months = ['Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov'];
+            $data = [0, 0, 0, 0, 0, 0];
+        } else {
+            $months = $monthlyStats->pluck('month')->toArray();
+            $data = $monthlyStats->pluck('total')->toArray();
+        }
 
         $this->enrollmentsChartData = [
             'labels' => $months,
             'datasets' => [
                 [
                     'label' => 'Inscripciones',
-                    'data' => [45, 52, 48, 61, 70, 55], // Datos azules
+                    'data' => $data,
                     'borderColor' => '#3b82f6',
                     'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
                     'tension' => 0.4,
-                    'fill' => false
-                ],
-                [
-                    'label' => 'Completadas',
-                    'data' => [38, 45, 42, 55, 62, 28], // Datos verdes
-                    'borderColor' => '#10b981',
-                    'backgroundColor' => 'rgba(16, 185, 129, 0.1)',
-                    'tension' => 0.4,
-                    'fill' => false
+                    'fill' => true
                 ]
             ]
         ];
-    }
 
-    public function prepareDoughnutChart()
-{
-    // Asegúrate de que esto tenga datos
-    $this->categoryChartData = [
-        'labels' => ['A', 'B', 'C'],
-        'datasets' => [[
-            'data' => [10, 20, 30],
-            'backgroundColor' => ['#3b82f6', '#10b981', '#f59e0b']
-        ]]
-    ];
-}
+        // 2. Gráfico de Torta: Categorías
+        $categories = Training::select('category', DB::raw('count(*) as total'))
+            ->groupBy('category')
+            ->get();
 
-    public function prepareBarChart()
-    {
-        // Datos para "Participación por Departamento"
+        $this->categoryChartData = [
+            'labels' => $categories->isEmpty() ? ['Sin datos'] : $categories->pluck('category')->toArray(),
+            'datasets' => [[
+                'data' => $categories->isEmpty() ? [1] : $categories->pluck('total')->toArray(),
+                'backgroundColor' => ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'],
+            ]]
+        ];
+
+        // 3. Gráfico de Barras: Por Sede
+        $campuses = TrainingSession::select('campus_name', DB::raw('count(*) as total'))
+            ->join('enrollments', 'training_sessions.id', '=', 'enrollments.training_session_id')
+            ->groupBy('campus_name')
+            ->limit(5)
+            ->get();
+
         $this->departmentChartData = [
-            'labels' => ['Ventas', 'IT', 'RRHH', 'Administración', 'Operaciones'],
-            'datasets' => [
-                [
-                    'label' => 'Participantes',
-                    'data' => [28, 22, 18, 15, 12],
-                    'backgroundColor' => '#3b82f6',
-                    'borderRadius' => 4
-                ]
-            ]
+            'labels' => $campuses->isEmpty() ? ['Sede Central'] : $campuses->pluck('campus_name')->toArray(),
+            'datasets' => [[
+                'label' => 'Participantes',
+                'data' => $campuses->isEmpty() ? [0] : $campuses->pluck('total')->toArray(),
+                'backgroundColor' => '#3b82f6',
+                'borderRadius' => 4
+            ]]
         ];
-    }
 
-    public function prepareHorizontalBarChart()
-    {
-        // Datos para "Distribución de Calificaciones"
+        // 4. Gráfico Horizontal: Notas
+        $grades = Enrollment::select(
+            DB::raw('CASE
+                WHEN grade >= 9 THEN "Excelente (9-10)"
+                WHEN grade >= 7 THEN "Bueno (7-8.9)"
+                WHEN grade >= 6 THEN "Regular (6-6.9)"
+                ELSE "Bajo (<6)"
+            END as range_grade'),
+            DB::raw('count(*) as total')
+        )
+        ->whereNotNull('grade')
+        ->groupBy('range_grade')
+        ->get();
+
         $this->gradesChartData = [
-            'labels' => ['Excelente (90-100)', 'Bueno (80-89)', 'Regular (70-79)', 'Bajo (<70)'],
-            'datasets' => [
-                [
-                    'label' => 'Estudiantes',
-                    'data' => [45, 35, 15, 5],
-                    'backgroundColor' => ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
-                    'borderRadius' => 4
-                ]
-            ]
+            'labels' => $grades->isEmpty() ? ['Sin notas'] : $grades->pluck('range_grade')->toArray(),
+            'datasets' => [[
+                'label' => 'Estudiantes',
+                'data' => $grades->isEmpty() ? [0] : $grades->pluck('total')->toArray(),
+                'backgroundColor' => ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
+                'borderRadius' => 4
+            ]]
         ];
     }
 

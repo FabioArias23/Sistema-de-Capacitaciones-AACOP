@@ -31,7 +31,7 @@ Route::middleware(['auth', 'verified'])->prefix('admin')->name('admin.')->group(
     Route::get('/sedes', CampusManagement::class)->name('campuses');
 });
 
-
+//export participantes 
 Route::get('/export/participants', [ExportController::class, 'exportParticipants'])
     ->name('export.participants')
     ->middleware(['auth', 'verified']); // Asegúrate de proteger la ruta

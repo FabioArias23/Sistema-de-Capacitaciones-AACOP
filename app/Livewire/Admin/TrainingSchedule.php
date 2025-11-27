@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Campus;
 use App\Models\Training;
 use App\Models\TrainingSession;
+use App\Models\User; // <--- 1. IMPORTANTE: Importamos el modelo User
 use Carbon\Carbon;
 use Livewire\Component;
 
@@ -33,6 +34,7 @@ class TrainingSchedule extends Component
     {
         $training = Training::find($value);
         if ($training) {
+            // Intentamos pre-llenar, pero el admin podrá cambiarlo con el select
             $this->instructor = $training->instructor;
             $this->capacity = $training->capacity;
         }
@@ -66,7 +68,7 @@ class TrainingSchedule extends Component
             'instructor' => 'required|string',
         ]);
 
-        // Obtenemos los modelos para llenar los campos denormalizados (título, nombre sede, etc.)
+        // Obtenemos los modelos para llenar los campos denormalizados
         $training = Training::find($this->training_id);
         $campus = Campus::find($this->campus_id);
 
@@ -75,7 +77,7 @@ class TrainingSchedule extends Component
             'campus_id' => $this->campus_id,
             'training_title' => $training->title,
             'campus_name' => $campus->name,
-            'instructor' => $this->instructor,
+            'instructor' => $this->instructor, // Se guarda el nombre exacto del usuario seleccionado
             'date' => $this->date,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
@@ -93,12 +95,12 @@ class TrainingSchedule extends Component
 
     public function render()
     {
-        // 1. Obtener sesiones de la fecha seleccionada en el input date
+        // 1. Obtener sesiones de la fecha seleccionada
         $sessionsOnDate = TrainingSession::whereDate('date', $this->selectedDate)
             ->orderBy('start_time')
             ->get();
 
-        // 2. Obtener próximas sesiones (independiente de la fecha seleccionada)
+        // 2. Obtener próximas sesiones
         $upcomingSessions = TrainingSession::where('date', '>=', now())
             ->orderBy('date')
             ->orderBy('start_time')
@@ -109,11 +111,15 @@ class TrainingSchedule extends Component
         $trainings = Training::where('status', 'Activo')->get();
         $campuses = Campus::where('status', 'Activo')->get();
 
+        // 4. Obtener los docentes reales (MODIFICACIÓN CLAVE)
+        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+
         return view('livewire.admin.training-schedule', [
             'sessionsOnDate' => $sessionsOnDate,
             'upcomingSessions' => $upcomingSessions,
             'trainings' => $trainings,
             'campuses' => $campuses,
+            'teachers' => $teachers, // <--- Pasamos los docentes a la vista
         ]);
     }
 }

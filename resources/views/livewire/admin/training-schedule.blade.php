@@ -168,48 +168,57 @@
                         @error('campus_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
 
-                    <!-- Fecha y Horarios -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha *</label>
-                            <input type="date" wire:model="date" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @error('date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Hora Inicio *</label>
-                            <input type="time" wire:model="start_time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @error('start_time') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Hora Fin *</label>
-                            <input type="time" wire:model="end_time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @error('end_time') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
+                   <!-- Fecha y Horarios (sin cambios) -->
+<div class="grid grid-cols-2 gap-4">
+    <div class="col-span-2">
+        <label class="block text-sm font-medium mb-1">Fecha *</label>
+        <input type="date" wire:model="date" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        @error('date') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Hora Inicio *</label>
+        <input type="time" wire:model="start_time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        @error('start_time') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Hora Fin *</label>
+        <input type="time" wire:model="end_time" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        @error('end_time') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    </div>
+</div>
 
-                    <!-- Instructor y Capacidad -->
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Instructor *</label>
-                            <input type="text" wire:model="instructor" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @error('instructor') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Capacidad *</label>
-                            <input type="number" wire:model="capacity" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                            @error('capacity') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
+<!-- Instructor y Capacidad -->
+<div class="grid grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-medium mb-1">Instructor *</label>
 
-                    <!-- Footer del Modal -->
-                    <div class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
-                        <button type="button" wire:click="$set('dialogOpen', false)" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Cancelar
-                        </button>
-                        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Confirmar Sesión
-                        </button>
-                    </div>
+        <!-- CAMBIO: Select dinámico con los docentes -->
+        <select wire:model="instructor" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <option value="">Seleccionar instructor...</option>
+            @foreach($teachers as $teacher)
+                <option value="{{ $teacher->name }}">{{ $teacher->name }}</option>
+            @endforeach
+        </select>
+
+        @error('instructor') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1">Capacidad *</label>
+        <input type="number" wire:model="capacity" class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+        @error('capacity') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    </div>
+</div>
+
+<!-- Footer del Modal (sin cambios) -->
+<div class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-100">
+    <button type="button" wire:click="$set('dialogOpen', false)" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Cancelar
+    </button>
+    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Confirmar Sesión
+    </button>
+</div>
+
                 </form>
             </div>
         </div>

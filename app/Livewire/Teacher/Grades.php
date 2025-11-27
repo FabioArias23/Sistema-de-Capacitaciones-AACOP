@@ -13,11 +13,34 @@ class Grades extends Component
     public $enrollments = [];
     public $gradesData = [];
 
+    // Propiedad computada para las métricas (estilo tarjeta superior)
+    public function getMetricsProperty()
+    {
+        if (empty($this->enrollments)) {
+            return ['average' => 0, 'passed' => 0, 'total' => 0];
+        }
+
+        // Filtramos solo los que tienen nota cargada para el promedio
+        $gradedStudents = collect($this->gradesData)->whereNotNull('grade');
+        $totalGraded = $gradedStudents->count();
+
+        // Promedio
+        $average = $totalGraded > 0 ? round($gradedStudents->avg('grade'), 1) : 0;
+
+        // Aprobados (Nota >= 6)
+        $passed = $gradedStudents->where('grade', '>=', 6)->count();
+
+        return [
+            'average' => $average,
+            'passed' => $passed,
+            'total' => $this->enrollments->count()
+        ];
+    }
+
     public function render()
     {
-        // El docente solo puede calificar sus propias clases
         $sessions = TrainingSession::where('instructor', Auth::user()->name)
-            ->where('date', '<=', now()) // Solo sesiones que ya han comenzado
+            ->where('date', '<=', now())
             ->orderBy('date', 'desc')
             ->get();
 
@@ -26,7 +49,6 @@ class Grades extends Component
         ]);
     }
 
-    // Se ejecuta cuando el docente selecciona una sesión
     public function updatedSelectedSessionId($sessionId)
     {
         if (empty($sessionId)) {
@@ -38,7 +60,7 @@ class Grades extends Component
             ->with('user')
             ->get();
 
-        // Preparamos el array con los datos para los inputs del formulario
+        // Mapeamos las notas. Si no tiene nota, lo dejamos como null para que el input esté vacío
         $this->gradesData = $this->enrollments->mapWithKeys(function ($enrollment) {
             return [$enrollment->id => [
                 'grade' => $enrollment->grade,
@@ -48,23 +70,30 @@ class Grades extends Component
 
     public function save()
     {
+        // Validación escala 0 a 10, permitimos decimales (numeric)
         $this->validate([
-            'gradesData.*.grade' => 'nullable|integer|min:0|max:100',
+            'gradesData.*.grade' => 'nullable|numeric|min:0|max:10',
         ]);
 
         foreach ($this->gradesData as $enrollmentId => $data) {
             $enrollment = Enrollment::find($enrollmentId);
             if ($enrollment) {
-                $grade = $data['grade'] ?: null;
-                $status = $enrollment->status; // Mantenemos el estado actual por defecto
+                $grade = $data['grade'];
 
-                // Solo actualizamos el estado si se ha introducido una nota
-                if ($grade !== null) {
-                    $status = $grade >= 70 ? 'Aprobado' : 'Reprobado';
+                // Determinamos el estado
+                // Si la nota es null (vacía), el estado se queda en "Inscrito" o "En progreso"
+                if ($grade === null || $grade === '') {
+                     // Opcional: Podrías regresarlo a 'Inscrito' si borran la nota
+                     $status = $enrollment->status === 'Inscrito' ? 'Inscrito' : $enrollment->status;
+                     $gradeToSave = null;
+                } else {
+                    // Escala 1-10: 6 o más aprueba
+                    $status = $grade >= 6 ? 'Aprobado' : 'Reprobado';
+                    $gradeToSave = $grade;
                 }
 
                 $enrollment->update([
-                    'grade' => $grade,
+                    'grade' => $gradeToSave,
                     'status' => $status,
                 ]);
             }
@@ -72,16 +101,7 @@ class Grades extends Component
 
         session()->flash('success', '¡Calificaciones guardadas correctamente!');
 
-        // Recargamos los datos para que la vista refleje el nuevo estado (Aprobado/Reprobado)
+        // Recargamos para actualizar las métricas
         $this->updatedSelectedSessionId($this->selectedSessionId);
-    }
-
-    // Función de ayuda para los badges de estado
-    public function getStatusBadgeClass(string $status): string
-    {
-        return [
-            'Aprobado' => 'bg-green-100 text-green-800',
-            'Reprobado' => 'bg-red-100 text-red-800',
-        ][$status] ?? 'bg-yellow-100 text-yellow-800';
     }
 }

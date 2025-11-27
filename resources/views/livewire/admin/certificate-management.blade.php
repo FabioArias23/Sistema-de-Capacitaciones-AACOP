@@ -38,7 +38,8 @@
                         <div class="p-4 hover:bg-gray-50 transition-colors">
                             <div class="flex justify-between items-start mb-2">
                                 <span class="font-bold text-gray-900">{{ $enrollment->user->name }}</span>
-                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Nota: {{ $enrollment->grade }}%</span>
+                                <!-- CORRECCIÓN AQUÍ: Se eliminó el signo % -->
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-0.5 rounded">Nota: {{ $enrollment->grade }}</span>
                             </div>
                             <p class="text-sm text-gray-600 mb-3">{{ $enrollment->trainingSession->training_title }}</p>
 

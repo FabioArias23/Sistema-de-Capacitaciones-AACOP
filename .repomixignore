@@ -1,0 +1,44 @@
+# Ignore vendor and node
+vendor/
+node_modules/
+
+# Laravel generated stuff
+storage/
+bootstrap/cache/
+
+# Frontend build
+public/build/
+public/storage/
+
+# Environment files
+.env
+.env.*
+
+# Images & binaries
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.svg
+*.ico
+*.pdf
+*.mp4
+*.zip
+
+# Editor / system files
+.DS_Store
+.vscode/
+.idea/
+
+# Laravel lock file
+composer.lock
+package-lock.json
+yarn.lock
+
+# Tests
+tests/
+
+# Factories & seeders
+database/factories/
+database/seeders/

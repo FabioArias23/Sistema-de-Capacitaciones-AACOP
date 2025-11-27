@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Training;
+use App\Models\User; // <--- IMPORTANTE: Importar el modelo User
 use Livewire\Component;
 
 class TrainingCatalog extends Component
@@ -39,6 +40,7 @@ class TrainingCatalog extends Component
 
     public function render()
     {
+        // 1. Búsqueda de Capacitaciones
         $trainings = Training::query()
             ->when($this->searchTerm, function ($query) {
                 $query->where('title', 'like', '%' . $this->searchTerm . '%')
@@ -48,8 +50,13 @@ class TrainingCatalog extends Component
             ->orderBy('id', 'desc')
             ->get();
 
+        // 2. Obtener lista de Docentes disponibles
+        // Filtramos por el rol 'teacher' y ordenamos alfabéticamente
+        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+
         return view('livewire.admin.training-catalog', [
             'trainings' => $trainings,
+            'teachers' => $teachers, // <--- Pasamos la variable a la vista
         ]);
     }
 
@@ -61,6 +68,8 @@ class TrainingCatalog extends Component
         $this->trainingForm['capacity'] = 20;
         $this->trainingForm['status'] = 'Activo';
         $this->trainingForm['level'] = 'Básico';
+        // Aseguramos que instructor esté vacío al crear
+        $this->trainingForm['instructor'] = '';
 
         $this->dialogOpen = true;
     }

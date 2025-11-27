@@ -23,6 +23,7 @@ class Enrollment extends Model
     {
         return $this->belongsTo(User::class);
     }
+    
 public function certificate(): HasOne
 {
     return $this->hasOne(Certificate::class);

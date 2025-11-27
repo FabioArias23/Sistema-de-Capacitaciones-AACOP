@@ -26,6 +26,10 @@ class Dashboard extends Component
             ['id' => 'progress', 'label' => 'Mi Progreso', 'icon' => 'trending-up'],
         ];
     }
+      public function changeSection($sectionId)
+    {
+        $this->activeSection = $sectionId;
+    }
 
     public function logout()
     {

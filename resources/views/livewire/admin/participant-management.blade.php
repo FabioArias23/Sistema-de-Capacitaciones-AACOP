@@ -84,7 +84,8 @@
                                             <!-- Nota (si existe) -->
                                             @if($enrollment->grade)
                                                 <span class="inline-flex items-center rounded-lg bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-                                                    Nota: {{ $enrollment->grade }}%
+                                                    <!-- CORRECCIÓN AQUÍ: Se eliminó el % -->
+                                                    Nota: {{ $enrollment->grade }}
                                                 </span>
                                             @endif
 

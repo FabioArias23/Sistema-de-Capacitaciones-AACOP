@@ -105,21 +105,31 @@
                             @error('trainingForm.capacity') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                         </div>
                     </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <label class="text-sm font-medium mb-1 block text-gray-700">Instructor *</label>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Instructor *</label>
-                            <input wire:model="trainingForm.instructor" class="w-full rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                            @error('trainingForm.instructor') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1 text-gray-700">Estado *</label>
-                            <select wire:model="trainingForm.status" class="w-full rounded-lg border border-gray-300 bg-white text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                                <option>Activo</option>
-                                <option>Inactivo</option>
-                            </select>
-                        </div>
-                    </div>
+            <!-- CAMBIO: Input convertido a Select -->
+            <select wire:model="trainingForm.instructor" class="w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Seleccionar Instructor...</option>
+                @foreach($teachers as $teacher)
+                    <option value="{{ $teacher->name }}">{{ $teacher->name }}</option>
+                @endforeach
+            </select>
+
+            @error('trainingForm.instructor')
+                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div>
+            <label class="text-sm font-medium mb-1 block text-gray-700">Estado *</label>
+            <select wire:model="trainingForm.status" class="w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+            </select>
+        </div>
+    </div>
 
                     <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
                         <button type="button" wire:click="$set('dialogOpen', false)" class="px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">Cancelar</button>

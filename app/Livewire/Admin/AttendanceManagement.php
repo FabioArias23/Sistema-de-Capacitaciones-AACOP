@@ -50,26 +50,49 @@ class AttendanceManagement extends Component
 
     public function save()
     {
+        // Validamos solo lo que realmente estamos enviando
         $this->validate([
-            'attendanceData.*.attendance' => 'required|integer|min:0|max:100',
-            'attendanceData.*.grade' => 'nullable|integer|min:0|max:100',
+            'attendanceData.*.attendance' => 'nullable',
+            'attendanceData.*.grade' => 'nullable|numeric|min:0|max:10',
         ]);
 
         foreach ($this->attendanceData as $enrollmentId => $data) {
             $enrollment = Enrollment::find($enrollmentId);
+
             if ($enrollment) {
+                // 1. Manejo de Asistencia (Checkbox)
+                // Si la clave existe en el array, la usamos. Si no, usamos el valor actual de la base de datos.
+                // Esto evita que se borre si no se tocó el checkbox.
+                $rawAtt = $data['attendance'] ?? $enrollment->attendance;
+
+                // Normalizamos a 100 o 0
+                $attendance = ($rawAtt == 100 || $rawAtt === true || $rawAtt === '100' || $rawAtt === 'on') ? 100 : 0;
+
+                // 2. Manejo de Nota (Input)
+                // Verificamos si 'grade' viene en el array. Si no, usamos el de la base de datos.
+                $grade = array_key_exists('grade', $data) ? $data['grade'] : $enrollment->grade;
+
+                // 3. Lógica de Estado (Aprobado/Reprobado por nota)
+                // Si la nota es nula o vacía, mantenemos el estado 'Inscrito' (o el que tenía antes si no era aprobado/reprobado)
+                if ($grade === null || $grade === '') {
+                     $status = in_array($enrollment->status, ['Aprobado', 'Reprobado']) ? 'Inscrito' : $enrollment->status;
+                     $gradeToSave = null;
+                } else {
+                    $status = $grade >= 6 ? 'Aprobado' : 'Reprobado';
+                    $gradeToSave = $grade;
+                }
+
                 $enrollment->update([
-                    'attendance' => $data['attendance'],
-                    'grade' => $data['grade'] ?: null, // Guarda null si el campo está vacío
-                    // Actualizamos el estado basado en la nota
-                    'status' => ($data['grade'] !== null && $data['grade'] >= 70) ? 'Aprobado' : (($data['grade'] !== null) ? 'Reprobado' : $enrollment->status),
+                    'attendance' => $attendance,
+                    'grade' => $gradeToSave,
+                    'status' => $status,
                 ]);
             }
         }
 
         session()->flash('success', '¡Asistencia y notas guardadas correctamente!');
 
-        // Opcional: Recargar los datos para reflejar los cambios de estado
+        // Recargamos los datos para refrescar la vista
         $this->updatedSelectedSessionId($this->selectedSessionId);
     }
 }

@@ -13,21 +13,29 @@ class ClassList extends Component
 
     public function mount()
     {
+        // Obtenemos el nombre del usuario logueado (el docente)
         $teacherName = Auth::user()->name;
 
-        // Obtenemos todas las sesiones asignadas a este docente
-        $allClasses = TrainingSession::where('instructor', $teacherName)
-            ->orderBy('date', 'desc')
+        // 1. Obtener TODAS las sesiones donde el instructor sea el usuario actual
+        $allSessions = TrainingSession::where('instructor', $teacherName)
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
             ->get();
 
-        // Filtramos las clases en "próximas" y "completadas"
-        $this->upcomingClasses = $allClasses->filter(function ($class) {
-            return $class->status === 'Programada' || $class->status === 'En curso';
+        // 2. Filtrar Próximas Clases:
+        // Status es 'Programada' o 'En curso', Y la fecha es hoy o futura
+        $this->upcomingClasses = $allSessions->filter(function ($session) {
+            return ($session->status === 'Programada' || $session->status === 'En curso')
+                && $session->date >= now()->format('Y-m-d');
         });
 
-        $this->completedClasses = $allClasses->filter(function ($class) {
-            return $class->status === 'Completada' || $class->status === 'Cancelada';
-        });
+        // 3. Filtrar Clases Completadas:
+        // Status es 'Completada', 'Cancelada' O la fecha ya pasó
+        $this->completedClasses = $allSessions->filter(function ($session) {
+            return $session->status === 'Completada'
+                || $session->status === 'Cancelada'
+                || ($session->status === 'Programada' && $session->date < now()->format('Y-m-d'));
+        })->sortByDesc('date'); // Las completadas las mostramos de la más reciente a la más antigua
     }
 
     public function render()
@@ -35,14 +43,15 @@ class ClassList extends Component
         return view('livewire.teacher.class-list');
     }
 
-    // Función de ayuda para los colores de los badges
-    public function getStatusBadgeClass(string $status): string
+    // Helper para colores de estado
+    public function getStatusBadgeClass($status)
     {
-        return [
-            'Programada' => 'bg-[#38C0E3]/10 text-[#38C0E3] dark:bg-[#38C0E3]/20',
-            'En curso' => 'bg-[#FFD700]/10 text-[#B8860B] dark:bg-[#FFD700]/20 dark:text-[#FFD700]',
-            'Completada' => 'bg-[#00A885]/10 text-[#00A885] dark:bg-[#00A885]/20',
-            'Cancelada' => 'bg-muted text-muted-foreground',
-        ][$status] ?? 'bg-muted text-muted-foreground';
+        return match ($status) {
+            'Programada' => 'bg-blue-100 text-blue-700 border-blue-200',
+            'En curso' => 'bg-amber-100 text-amber-700 border-amber-200',
+            'Completada' => 'bg-green-100 text-green-700 border-green-200',
+            'Cancelada' => 'bg-red-100 text-red-700 border-red-200',
+            default => 'bg-gray-100 text-gray-700',
+        };
     }
 }

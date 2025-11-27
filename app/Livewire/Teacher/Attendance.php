@@ -13,11 +13,30 @@ class Attendance extends Component
     public $enrollments = [];
     public $attendanceData = [];
 
+    // Propiedad computada para las métricas en tiempo real
+    public function getMetricsProperty()
+    {
+        if (empty($this->attendanceData)) {
+            return ['present' => 0, 'total' => 0, 'rate' => 0];
+        }
+
+        $total = count($this->attendanceData);
+        // Consideramos "Presente" si la asistencia es 100
+        $present = collect($this->attendanceData)->where('attendance', 100)->count();
+
+        $rate = $total > 0 ? round(($present / $total) * 100) : 0;
+
+        return [
+            'present' => $present,
+            'total' => $total,
+            'rate' => $rate
+        ];
+    }
+
     public function render()
     {
-        // El docente solo puede pasar lista de sus propias clases
         $sessions = TrainingSession::where('instructor', Auth::user()->name)
-            ->where('date', '<=', now()) // Solo sesiones pasadas o del día de hoy
+            ->where('date', '<=', now())
             ->orderBy('date', 'desc')
             ->get();
 
@@ -26,7 +45,6 @@ class Attendance extends Component
         ]);
     }
 
-    // Se ejecuta cuando el docente selecciona una sesión del desplegable
     public function updatedSelectedSessionId($sessionId)
     {
         if (empty($sessionId)) {
@@ -38,18 +56,27 @@ class Attendance extends Component
             ->with('user')
             ->get();
 
-        // Preparamos el array con los datos para los inputs del formulario
+        // Inicializamos: Si ya tiene valor, lo usamos. Si es null, asumimos 0 (Ausente) por defecto.
         $this->attendanceData = $this->enrollments->mapWithKeys(function ($enrollment) {
             return [$enrollment->id => [
-                'attendance' => $enrollment->attendance,
+                'attendance' => $enrollment->attendance ?? 0,
             ]];
         })->toArray();
     }
 
+    // Método para alternar asistencia (Click en el checkbox)
+    public function toggleAttendance($enrollmentId)
+    {
+        $current = $this->attendanceData[$enrollmentId]['attendance'];
+        // Si tiene algo (100), lo ponemos en 0. Si es 0, lo ponemos en 100.
+        $this->attendanceData[$enrollmentId]['attendance'] = $current == 100 ? 0 : 100;
+    }
+
     public function save()
     {
+        // Validamos
         $this->validate([
-            'attendanceData.*.attendance' => 'required|integer|min:0|max:100',
+            'attendanceData.*.attendance' => 'required|integer',
         ]);
 
         foreach ($this->attendanceData as $enrollmentId => $data) {
