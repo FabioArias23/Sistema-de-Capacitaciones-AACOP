@@ -26,12 +26,3 @@ tests
 phpunit.xml
 README.md
 docker-compose.yml
-.vscode
-.idea
-
-# NO excluyas estos archivos (deben incluirse en la imagen):
-# nginx.conf
-# php-fpm.conf
-# supervisor.conf
-# php.ini
-# entrypoint.sh
