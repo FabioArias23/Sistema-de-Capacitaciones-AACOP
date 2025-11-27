@@ -1,64 +1,59 @@
-@if ($campusDialog)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" wire:click="$set('campusDialog', false)">
+@if ($showModal)
+    <x-modal wire:model="showModal">
 
-        <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6" @click.stop>
+        <!-- ENCABEZADO (Reemplazo de x-modal.header) -->
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-medium text-gray-900">
+                {{ isset($campus['id']) && $campus['id'] ? 'Editar Sede' : 'Nueva Sede' }}
+            </h3>
+        </div>
 
-            <h2 class="text-lg font-semibold mb-4 text-gray-900"> {{ $campusForm['id'] ? 'Editar Sede' : 'Nueva Sede' }}
-            </h2>
+        <!-- CUERPO (Reemplazo de x-modal.body) -->
+        <div class="px-6 py-4 space-y-4">
+            <div>
+                <x-input-label value="Nombre *" />
+                <x-text-input wire:model="campus.name" type="text" class="w-full" />
+                @error('campus.name') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
 
-            <div class="space-y-4">
+            <div>
+                <x-input-label value="Dirección *" />
+                <x-text-input wire:model="campus.address" type="text" class="w-full" />
+                @error('campus.address') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
 
+            <div>
+                <x-input-label value="Ciudad *" />
+                <x-text-input wire:model="campus.city" type="text" class="w-full" />
+                @error('campus.city') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="text-sm font-medium text-gray-700">Nombre *</label>
-                    <input type="text"
-                        wire:model="campusForm.name"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
+                    <x-input-label value="Capacidad *" />
+                    <x-text-input wire:model="campus.capacity" type="number" class="w-full" />
+                    @error('campus.capacity') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
-
                 <div>
-                    <label class="text-sm font-medium text-gray-700">Ciudad *</label>
-                    <input type="text"
-                        wire:model="campusForm.city"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Dirección *</label>
-                    <input type="text"
-                        wire:model="campusForm.address"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Capacidad *</label>
-                    <input type="number"
-                        wire:model="campusForm.capacity"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Estado *</label>
-                    <select wire:model="campusForm.status"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 mt-1 text-gray-900 focus:border-blue-500 focus:ring-blue-500">
+                    <x-input-label value="Estado *" />
+                    <select wire:model="campus.status" class="w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                         <option value="Activo">Activo</option>
                         <option value="Inactivo">Inactivo</option>
                     </select>
                 </div>
-
             </div>
-
-            <div class="flex justify-end gap-3 mt-6">
-                <button wire:click="$set('campusDialog', false)"
-                    class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
-                    Cancelar
-                </button>
-
-                <button wire:click="saveCampus"
-                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                    Guardar
-                </button>
-            </div>
-
         </div>
-    </div>
+
+        <!-- PIE (Reemplazo de x-modal.footer) -->
+        <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+            <x-secondary-button wire:click="$set('showModal', false)">
+                Cancelar
+            </x-secondary-button>
+
+            <x-primary-button wire:click="save">
+                {{ isset($campus['id']) && $campus['id'] ? 'Guardar Cambios' : 'Crear Sede' }}
+            </x-primary-button>
+        </div>
+
+    </x-modal>
 @endif
