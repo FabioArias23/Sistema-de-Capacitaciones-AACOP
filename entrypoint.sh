@@ -3,35 +3,22 @@ set -e
 
 echo "🚀 Iniciando contenedor en Producción..."
 
-# --- FIX CRÍTICO ---
-# Borramos el archivo .env físico para obligar a Laravel a usar
-# EXCLUSIVAMENTE las variables de entorno configuradas en Render.
+# Aseguramos que no exista un .env que cause conflictos
 if [ -f .env ]; then
-    echo "🗑️ Eliminando .env local para evitar conflictos con variables de Render..."
+    echo "🗑️ Eliminando archivo .env residual..."
     rm .env
-fi
-# -------------------
-
-# Si no existe la key en las variables de entorno (por seguridad)
-if [ -z "$APP_KEY" ]; then
-    echo "⚠️ ADVERTENCIA: APP_KEY no detectada en variables de entorno."
-else
-    echo "✅ APP_KEY detectada."
 fi
 
 echo "📦 Ejecutando migraciones..."
+# Force migration corre las migraciones contra la DB configurada en Render
 php artisan migrate --force
 
-echo "🔥 Optimizando Laravel..."
-# Limpiamos caches primero por si acaso
+echo "🔥 Limpiando cachés..."
+# IMPORTANTE: Usamos 'clear' en lugar de 'cache' para asegurar que lea las variables de entorno de Render
 php artisan config:clear
-php artisan cache:clear
-
-# Generamos los caches de producción usando las variables de Render
-php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-echo "⚡ Iniciando Supervisor..."
+echo "✅ Configuración lista. Iniciando servidor..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
