@@ -7,32 +7,30 @@ echo "🚀 Iniciando contenedor en Producción..."
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# 2. Limpiar cachés antiguos
+# 2. Limpiar cachés
 echo "🧹 Limpiando cachés..."
-rm -rf /var/www/html/bootstrap/cache/*.php
 php artisan config:clear || true
 php artisan cache:clear || true
 php artisan view:clear || true
+php artisan route:clear || true
 
-# 3. Generar configuración
-echo "🔥 Generando configuración..."
+# 3. Optimizar
+echo "🔥 Optimizando..."
 php artisan config:cache
-
-# 4. Ejecutar migraciones
-echo "📦 Ejecutando migraciones..."
-php artisan migrate --force --no-interaction
-
-# 5. Optimizaciones
-echo "⚡ Optimizando aplicación..."
 php artisan route:cache
 php artisan view:cache
 php artisan event:cache
 
-# 6. Publicar assets de Livewire (NUEVO)
+# 4. Migraciones
+echo "📦 Ejecutando migraciones..."
+php artisan migrate --force --no-interaction
+
+# 5. 🔥 CRÍTICO: Publicar assets de Livewire para evitar error 404
 echo "🎨 Publicando assets de Livewire..."
 php artisan livewire:publish --assets || true
 
-# 7. Crear link simbólico para storage
+# 6. Link de Storage (con || true para que no falle si ya existe)
+echo "🔗 Creando storage link..."
 php artisan storage:link || true
 
 echo "✅ Aplicación lista. Iniciando servicios..."
