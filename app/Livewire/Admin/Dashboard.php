@@ -19,16 +19,18 @@ class Dashboard extends Component
         $this->user = Auth::user();
         $this->activeSection = $section;
 
-        $this->navItems = [
-            ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
-            ['id' => 'catalog', 'label' => 'Capacitaciones', 'icon' => 'graduation-cap'],
-            ['id' => 'campus', 'label' => 'Sedes', 'icon' => 'building-2'],
-            ['id' => 'schedule', 'label' => 'Calendario', 'icon' => 'calendar'],
-            ['id' => 'participants', 'label' => 'Participantes', 'icon' => 'users'],
-            ['id' => 'attendance', 'label' => 'Asistencia', 'icon' => 'clipboard-check'],
-            ['id' => 'certificates', 'label' => 'Certificados', 'icon' => 'award'],
-            ['id' => 'reports', 'label' => 'Reportes', 'icon' => 'bar-chart-3'],
-        ];
+     $this->navItems = [
+    ['id' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'home'],
+    ['id' => 'catalog', 'label' => 'Capacitaciones', 'icon' => 'graduation-cap'],
+    ['id' => 'campus', 'label' => 'Sedes', 'icon' => 'building-2'],
+    ['id' => 'schedule', 'label' => 'Calendario', 'icon' => 'calendar'],
+    ['id' => 'participants', 'label' => 'Participantes', 'icon' => 'users'],
+    ['id' => 'teachers', 'label' => 'Docentes', 'icon' => 'user-check'],   // 👈 NUEVO
+    ['id' => 'attendance', 'label' => 'Asistencia', 'icon' => 'clipboard-check'],
+    ['id' => 'certificates', 'label' => 'Certificados', 'icon' => 'award'],
+    ['id' => 'reports', 'label' => 'Reportes', 'icon' => 'bar-chart-3'],
+];
+
     }
 
     public function changeSection(string $sectionId)

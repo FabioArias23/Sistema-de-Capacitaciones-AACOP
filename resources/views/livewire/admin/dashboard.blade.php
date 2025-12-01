@@ -163,6 +163,7 @@
                 @case('campus') <livewire:admin.campus-management :key="'cam-'.time()" /> @break
                 @case('schedule') <livewire:admin.training-schedule :key="'sch-'.time()" /> @break
                 @case('participants') <livewire:admin.participant-management :key="'part-'.time()" /> @break
+                @case('teachers') <livewire:admin.teacher-management :key="'teacher-management-'.now()->timestamp" /> @break
                 @case('attendance') <livewire:admin.attendance-management :key="'att-'.time()" /> @break
                 @case('certificates') <livewire:admin.certificate-management :key="'cert-'.time()" /> @break
                 @case('reports') <livewire:admin.training-reports :key="'rep-'.time()" /> @break

@@ -51,8 +51,11 @@ class TrainingCatalog extends Component
             ->get();
 
         // 2. Obtener lista de Docentes disponibles
-        // Filtramos por el rol 'teacher' y ordenamos alfabéticamente
-        $teachers = User::where('role', 'teacher')->orderBy('name')->get();
+// Filtramos por el rol 'docente' (coincide con el módulo de Docentes)
+$teachers = User::where('role', 'docente')
+    ->orderBy('name')
+    ->get();
+
 
         return view('livewire.admin.training-catalog', [
             'trainings' => $trainings,

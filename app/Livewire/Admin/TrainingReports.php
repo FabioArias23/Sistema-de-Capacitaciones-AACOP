@@ -46,17 +46,27 @@ class TrainingReports extends Component
     public function prepareCharts()
     {
         // 1. Gráfico de Línea: Inscripciones por Mes (Últimos 6 meses)
-        // 🔥 CORRECCIÓN: Usamos TO_CHAR para PostgreSQL en lugar de DATE_FORMAT
+        // Soporta tanto PostgreSQL (deploy en Render) como MySQL (entorno local)
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // PostgreSQL: TO_CHAR devuelve el mes abreviado (Jan, Feb, etc.)
+            $monthExpression = "TO_CHAR(created_at, 'Mon')";
+            $orderExpression = "MIN(created_at)";
+        } else {
+            // MySQL u otros: usamos DATE_FORMAT para obtener el mes abreviado
+            $monthExpression = "DATE_FORMAT(created_at, '%b')";
+            $orderExpression = "MIN(created_at)";
+        }
+
         $monthlyStats = Enrollment::select(
-            DB::raw("TO_CHAR(created_at, 'Mon') as month"),
-            DB::raw('count(*) as total')
-        )
-        ->where('created_at', '>=', now()->subMonths(6))
-        ->groupBy('month')
-        // En Postgres necesitamos agrupar también por la fecha para ordenar, o usar min/max
-        // Para simplificar el ordenamiento en el gráfico sin complicar la query SQL:
-        ->orderByRaw("MIN(created_at)")
-        ->get();
+                DB::raw("$monthExpression as month"),
+                DB::raw('COUNT(*) as total')
+            )
+            ->where('created_at', '>=', now()->subMonths(6))
+            ->groupBy('month')
+            ->orderByRaw($orderExpression)
+            ->get();
 
         // Si no hay datos, ponemos datos dummy
         if ($monthlyStats->isEmpty()) {
@@ -112,8 +122,6 @@ class TrainingReports extends Component
         ];
 
         // 4. Gráfico Horizontal: Notas
-        // Postgres usa comillas dobles para alias o texto literal en CASE a veces requiere cuidado
-        // Usamos sintaxis estándar SQL compatible
         $grades = Enrollment::select(
             DB::raw("CASE
                 WHEN grade >= 9 THEN 'Excelente (9-10)'
